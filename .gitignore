@@ -1,0 +1,9 @@
+# ignore dossier ./venv
+venv/
+
+# ignore les fichiers .pyc
+*.pyc
+# ignore le dossier __pycache__
+__pycache__/
+# ignore les fichiers de log
+*.log
