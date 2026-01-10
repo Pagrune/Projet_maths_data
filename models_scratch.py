@@ -1,5 +1,6 @@
 import numpy as np
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import Lasso, Ridge
+from sklearn.metrics import accuracy_score
 
 
 def softmax(z):
@@ -22,7 +23,7 @@ def gradients(X, y, probs):
     db = np.mean(probs - Y, axis=0)
     return dW, db
 
-def train_scratch(X_train, y_train, n_features, n_classes, lr=0.01, epochs=1000, lambda_reg=0.001):
+def train_scratch(X_train, y_train, n_features, n_classes, lr=0.01, epochs=1000, lambda_reg=0):
     W = np.random.randn(n_features, n_classes) * 0.01
     b = np.zeros(n_classes)
     losses = []
@@ -43,15 +44,27 @@ def train_scratch(X_train, y_train, n_features, n_classes, lr=0.01, epochs=1000,
 
     return W, b, losses
 
+def find_best_lambda_l2(X_train, y_train, X_val, y_val, n_classes, lambdas):
+    scores = []
 
-def lasso_reg(X, y):
-    alphas = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000]
-    coefs_lasso = []
-    
-    for alpha in alphas:
-        lasso = Lasso(alpha=alpha, max_iter=10000)
-        lasso.fit(X, y)
-        # Attention : .coef_ avec un underscore
-        coefs_lasso.append(lasso.coef_.flatten())
-        
-    return alphas, np.array(coefs_lasso)
+    for l in lambdas:
+        W, b, _ = train_scratch(
+            X_train, y_train,
+            n_features=X_train.shape[1],
+            n_classes=n_classes,
+            lr=0.01,
+            epochs=500,
+            lambda_reg=l
+        )
+
+        # prédiction sur validation
+        probs = predict(X_val, W, b)
+        y_pred = np.argmax(probs, axis=1)
+
+        acc = accuracy_score(y_val, y_pred)
+        scores.append(acc)
+
+    best_idx = np.argmax(scores)
+    best_lambda = lambdas[best_idx]
+
+    return best_lambda, scores
