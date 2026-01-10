@@ -1,4 +1,6 @@
 import numpy as np
+from sklearn.linear_model import Lasso
+
 
 def softmax(z):
     exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))
@@ -35,4 +37,21 @@ def train_scratch(X_train, y_train, n_features, n_classes, lr=0.01, epochs=1000,
         
         W -= lr * dW_reg
         b -= lr * db
+
+        if epoch % 100 == 0:
+            print(f"Epoch {epoch}, Loss = {loss:.4f}")
+
     return W, b, losses
+
+
+def lasso_reg(X, y):
+    alphas = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000]
+    coefs_lasso = []
+    
+    for alpha in alphas:
+        lasso = Lasso(alpha=alpha, max_iter=10000)
+        lasso.fit(X, y)
+        # Attention : .coef_ avec un underscore
+        coefs_lasso.append(lasso.coef_.flatten())
+        
+    return alphas, np.array(coefs_lasso)
