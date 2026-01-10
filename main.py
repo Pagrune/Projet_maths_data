@@ -73,13 +73,32 @@ y_pred_scratch = np.argmax(predict_scratch(X_test, W, b), axis=1)
 y_pred_L2 = np.argmax(predict_scratch(X_test, W_L2, b_L2), axis=1)
 y_pred_sklearn = clf.predict(X_test)
 
+
+
+from sklearn.svm import SVC
+
+clf_svc = SVC(kernel='linear', C=1.0)
+clf_svc.fit(X_train, y_train)
+y_pred_svc = clf_svc.predict(X_test)
+
+
+from sklearn.ensemble import RandomForestClassifier
+
+clf_random = RandomForestClassifier(n_estimators=100, random_state=42)
+clf_random.fit(X_train, y_train)
+y_pred_random = clf_random.predict(X_test)
+
+acc_sklearn_svc = accuracy_score(y_test, y_pred_svc)
 acc_scratch = accuracy_score(y_test, y_pred_scratch)
 acc_L2 = accuracy_score(y_test, y_pred_L2)
 acc_sklearn = accuracy_score(y_test, y_pred_sklearn)
+acc_sklearn_random = accuracy_score(y_test, y_pred_random)
 
-print(f"\nPrécision Scratch : {acc_scratch:.4f}")
+print(f"\nAccuracy Scratch : {acc_scratch:.4f}")
 print(f"Accuracy Scratch AVEC L2 : {acc_L2:.4f}")
-print(f"Précision Sklearn : {acc_sklearn:.4f}")
+print(f"Accuracy Sklearn : {acc_sklearn:.4f}")
+print(f"Accuracy Sklearn SVC : {acc_sklearn_svc:.4f}")
+print(f"Accuracy Sklearn Random forest : {acc_sklearn_random:.4f}")
 
 
 
