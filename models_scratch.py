@@ -68,3 +68,39 @@ def find_best_lambda_l2(X_train, y_train, X_val, y_val, n_classes, lambdas):
     best_lambda = lambdas[best_idx]
 
     return best_lambda, scores
+
+def train_scratch_stoc(X_train, y_train, n_features, n_classes, lr=0.01, epochs=1000, lambda_reg=0):
+    W = np.random.randn(n_features, n_classes) * 0.01
+    b = np.zeros(n_classes)
+    losses = []
+    n = X_train.shape[0]
+
+    for epoch in range(epochs):
+        indices = np.random.permutation(n)
+
+        for i in indices:
+            x_i = X_train[i:i+1]  
+            y_i = y_train[i]   
+
+            # ► forward
+            probs = predict(x_i, W, b) 
+
+            loss_i = -np.log(probs[0, y_i] + 1e-15)
+
+            Y = np.zeros_like(probs)
+            Y[0, y_i] = 1
+
+            dW = x_i.T @ (probs - Y) + lambda_reg * W
+            db = (probs - Y).ravel()
+
+            W -= lr * dW
+            b -= lr * db
+
+        probs_all = predict(X_train, W, b)
+        loss_epoch = crossEntropy(y_train, probs_all) + (lambda_reg / 2) * np.sum(W**2)
+        losses.append(loss_epoch)
+
+        if epoch % 1 == 0:
+            print(f"Epoch {epoch}, Loss = {loss_epoch:.4f}")
+
+    return W, b, losses

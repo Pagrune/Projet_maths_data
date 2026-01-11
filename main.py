@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.preprocessing import StandardScaler
 
 
-from models_scratch import train_scratch, predict as predict_scratch, find_best_lambda_l2
+from models_scratch import train_scratch, predict as predict_scratch, find_best_lambda_l2, train_scratch_stoc
 from models_scikit import train_sklearn
 
 # Preprocessing 
@@ -24,6 +24,13 @@ X_test = scaler.transform(X_test)
 # Entrainement des modèles
 print("Entraînement du modèle From Scratch sans régularisation ...")
 W, b, losses = train_scratch(X_train, y_train, X_train.shape[1], 10)
+
+
+
+# Scratch avec descente stochastique
+
+W_3, b_3, losses_3 = train_scratch_stoc(X_train, y_train, X_train.shape[1], 10, lr=0.01, epochs=20, lambda_reg=0.0)
+
 
 
 # Essai pour trouver le meilleur lambda
@@ -70,6 +77,7 @@ clf = train_sklearn(X_train, y_train)
 
 
 y_pred_scratch = np.argmax(predict_scratch(X_test, W, b), axis=1)
+y_pred_scratch_stoc = np.argmax(predict_scratch(X_test, W_3, b_3), axis=1)
 y_pred_L2 = np.argmax(predict_scratch(X_test, W_L2, b_L2), axis=1)
 y_pred_sklearn = clf.predict(X_test)
 
@@ -89,12 +97,14 @@ clf_random.fit(X_train, y_train)
 y_pred_random = clf_random.predict(X_test)
 
 acc_sklearn_svc = accuracy_score(y_test, y_pred_svc)
+acc_stoc = accuracy_score(y_test, y_pred_scratch_stoc)
 acc_scratch = accuracy_score(y_test, y_pred_scratch)
 acc_L2 = accuracy_score(y_test, y_pred_L2)
 acc_sklearn = accuracy_score(y_test, y_pred_sklearn)
 acc_sklearn_random = accuracy_score(y_test, y_pred_random)
 
 print(f"\nAccuracy Scratch : {acc_scratch:.4f}")
+print(f"\nAccuracy Scratch stoc: {acc_stoc:.4f}")
 print(f"Accuracy Scratch AVEC L2 : {acc_L2:.4f}")
 print(f"Accuracy Sklearn : {acc_sklearn:.4f}")
 print(f"Accuracy Sklearn SVC : {acc_sklearn_svc:.4f}")
@@ -106,20 +116,26 @@ print(f"Accuracy Sklearn Random forest : {acc_sklearn_random:.4f}")
 
 cm_scratch = confusion_matrix(y_test, y_pred_scratch)
 cm_sklearn = confusion_matrix(y_test, y_pred_sklearn)
+cm_stoc = confusion_matrix(y_test, y_pred_scratch_stoc)
 
 
-# Affichage des matrices de confusion
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+# Affichage matrices confusion
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20, 5))
 
-sns.heatmap(cm_scratch, annot=True, fmt="d", cmap="Blues", ax=ax1)
+sns.heatmap(cm_scratch, annot=True, fmt="d", cmap="Blues", ax=ax1, cbar=False)
 ax1.set_title(f"Matrice de confusion - Scratch\n(Acc: {acc_scratch:.4f})")
 ax1.set_ylabel("Vraie classe")
 ax1.set_xlabel("Classe prédite")
 
-sns.heatmap(cm_sklearn, annot=True, fmt="d", cmap="Greens", ax=ax2)
-ax2.set_title(f"Matrice de confusion - Scikit-Learn\n(Acc: {acc_sklearn:.4f})")
+sns.heatmap(cm_stoc, annot=True, fmt="d", cmap="Reds", ax=ax2, cbar=False)
+ax2.set_title(f"Matrice de confusion - Stochastique\n(Acc: {acc_stoc:.4f})")
 ax2.set_ylabel("Vraie classe")
 ax2.set_xlabel("Classe prédite")
+
+sns.heatmap(cm_sklearn, annot=True, fmt="d", cmap="Greens", ax=ax3, cbar=False)
+ax3.set_title(f"Matrice de confusion - Scikit-Learn\n(Acc: {acc_sklearn:.4f})")
+ax3.set_ylabel("Vraie classe")
+ax3.set_xlabel("Classe prédite")
 
 plt.tight_layout()
 plt.show()

@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 
-from models_scratch import train_scratch, predict as predict_scratch, find_best_lambda_l2
+from models_scratch import train_scratch, predict as predict_scratch, find_best_lambda_l2, train_scratch_stoc
 from models_scikit import train_sklearn
 
 # -------------------------------
@@ -41,6 +41,9 @@ n_classes = 10
 W, b, losses = train_scratch(X_train_small, y_train_small, n_features, n_classes,
                              lr=0.01, epochs=500, lambda_reg=0)
 
+W_3, b_3, losses_3 = train_scratch_stoc(X_train_small, y_train_small, n_features, n_classes,
+                             lr=0.005, epochs=20, lambda_reg=0)
+
 # Scratch avec régularisation
 
 lambda_reg = 0.001 
@@ -60,6 +63,7 @@ clf_rf.fit(X_train_small, y_train_small)
 
 
 y_pred_scratch = np.argmax(predict_scratch(X_test_scaled, W, b), axis=1)
+y_pred_scratch_stoc = np.argmax(predict_scratch(X_test_scaled, W_3, b_3), axis=1)
 y_pred_L2 = np.argmax(predict_scratch(X_test_scaled, W_L2, b_L2), axis=1)
 y_pred_log = clf_log.predict(X_test_scaled)
 y_pred_svc = clf_svc.predict(X_test_scaled)
@@ -69,6 +73,7 @@ y_pred_rf  = clf_rf.predict(X_test_scaled)
 #Accuracy
 print("Scratch:", accuracy_score(y_test, y_pred_scratch))
 print("Scratch + L2:", accuracy_score(y_test, y_pred_L2))
+print("Scratch stochastique:", accuracy_score(y_test, y_pred_scratch_stoc))
 print("LogisticRegression:", accuracy_score(y_test, y_pred_log))
 print("SVC:", accuracy_score(y_test, y_pred_svc))
 print("RandomForest:", accuracy_score(y_test, y_pred_rf))
@@ -87,22 +92,25 @@ plt.show()
 
 acc_scratch = accuracy_score(y_test, y_pred_scratch)
 acc_sklearn_rf = accuracy_score(y_test, y_pred_rf)
+acc_stoc = accuracy_score(y_test, y_pred_scratch_stoc)
 
 cm_scratch = confusion_matrix(y_test, y_pred_scratch)
 cm_sklearn_rf = confusion_matrix(y_test, y_pred_rf)
+cm_stoc = confusion_matrix(y_test, y_pred_scratch_stoc)
 
-# Affichage des matrices de confusion
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+# Affichage matrices confusion
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20, 5))
 
-sns.heatmap(cm_scratch, annot=True, fmt="d", cmap="Blues", ax=ax1)
-ax1.set_title(f"Matrice de confusion - Scratch\n(Acc: {acc_scratch:.4f})")
-ax1.set_ylabel("Vraie classe")
-ax1.set_xlabel("Classe prédite")
+sns.heatmap(cm_scratch, annot=True, fmt="d", cmap="Blues", ax=ax1, cbar=False)
+ax1.set_title(f"Scratch Batch\nAcc: {acc_scratch:.4f}")
 
-sns.heatmap(cm_sklearn_rf, annot=True, fmt="d", cmap="Greens", ax=ax2)
-ax2.set_title(f"Matrice de confusion - Scikit-Learn\n(Acc: {acc_sklearn_rf:.4f})")
-ax2.set_ylabel("Vraie classe")
-ax2.set_xlabel("Classe prédite")
+
+sns.heatmap(cm_stoc, annot=True, fmt="d", cmap="Reds", ax=ax2, cbar=False)
+ax2.set_title(f"Scratch Stochastique\nAcc: {acc_stoc:.4f}")
+
+
+sns.heatmap(cm_sklearn_rf, annot=True, fmt="d", cmap="Greens", ax=ax3, cbar=False)
+ax3.set_title(f"Random Forest Scikit\nAcc: {acc_sklearn_rf:.4f}")
 
 plt.tight_layout()
 plt.show()
